@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import List, Dict, Optional
 
 import bpy
 from mathutils import Matrix
@@ -54,7 +54,7 @@ def load_xcmsh(context: bpy.types.Context, filepath: Path, mesh_name: str, globa
 def _import_mesh(mesh_name: str, mesh_elem: eCMeshElement, state: _ImportState) -> Optional[bpy.types.Mesh]:
     mesh = bpy.data.meshes.new(mesh_name)
 
-    vertices_arr: list[bCVector] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.VertexPosition)
+    vertices_arr: List[bCVector] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.VertexPosition)
     if vertices_arr is None:
         raise ValueError(f"Invalid mesh '{mesh_name}': No vertices array.")
     # Vertices and faces
@@ -63,7 +63,7 @@ def _import_mesh(mesh_name: str, mesh_elem: eCMeshElement, state: _ImportState) 
     else:
         vertices = [to_blend_vec_tuple(v) for v in vertices_arr]
 
-    indices_arr: list[int] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.Face)
+    indices_arr: List[int] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.Face)
     if indices_arr is None:
         raise ValueError(f"Invalid mesh '{mesh_name}': No face indices array.")
     if len(indices_arr) % 3 != 0:
@@ -78,7 +78,7 @@ def _import_mesh(mesh_name: str, mesh_elem: eCMeshElement, state: _ImportState) 
     # TODO: Normals?
 
     # Texture coordinates
-    tex_coords_arr: list[bCVector2] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.TextureCoordinate)
+    tex_coords_arr: List[bCVector2] = mesh_elem.get_stream_array_by_type(eEVertexStreamArrayType.TextureCoordinate)
     if tex_coords_arr:
         uv_layer = mesh.uv_layers.new(name='uv', do_init=False)
         for i, tex_coord in enumerate(tex_coords_arr):

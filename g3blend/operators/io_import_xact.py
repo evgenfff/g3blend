@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import List, Dict, Optional, Union
 
 import bpy
 from mathutils import Matrix, Vector
@@ -51,7 +51,7 @@ def load_xact(context: bpy.types.Context, filepath: Path, actor_name: str, globa
 
 
 def _import_meshes(name: str, actor: eCWrapper_emfx2Actor, armature_obj: bpy.types.Object, state: _ImportState) \
-        -> list[bpy.types.Object]:
+        -> List[bpy.types.Object]:
     nodes = actor.get_chunks_by_type(NodeChunk)
     skinning = actor.get_chunk_by_type(SkinningInfoChunk)
 
@@ -71,7 +71,7 @@ def _import_meshes(name: str, actor: eCWrapper_emfx2Actor, armature_obj: bpy.typ
     return meshes
 
 
-def _import_mesh(mesh_name: str, submesh: Submesh, state: _ImportState) -> bpy.types.Mesh | None:
+def _import_mesh(mesh_name: str, submesh: Submesh, state: _ImportState) -> Union[bpy.types.Mesh, None]:
     mesh = bpy.data.meshes.new(mesh_name)
 
     # Vertices and faces
@@ -97,7 +97,7 @@ def _import_mesh(mesh_name: str, submesh: Submesh, state: _ImportState) -> bpy.t
     return mesh
 
 
-def _import_skinning(submesh: Submesh, nodes: list[NodeChunk], skinning: SkinningInfoChunk,
+def _import_skinning(submesh: Submesh, nodes: List[NodeChunk], skinning: SkinningInfoChunk,
                      mesh_obj: bpy.types.Object, armature_obj: bpy.types.Object):
     # Skinning
     mod: bpy.types.ArmatureModifier = mesh_obj.modifiers.new(armature_obj.name, 'ARMATURE')
@@ -170,7 +170,7 @@ def _is_obsolete_joint(node: NodeChunk):
 
 
 def _import_armature_node(arm_data: bpy.types.Armature, parent_matrix: Matrix, parent_correction_matrix_inv: Matrix,
-                          parent_bone: Optional[bpy.types.EditBone], node: NodeChunk, nodes: list[NodeChunk],
+                          parent_bone: Optional[bpy.types.EditBone], node: NodeChunk, nodes: List[NodeChunk],
                           state: _ImportState):
     # TODO: Scale...
     # Oh, the problem is that scale is all zeroes, but what is about scale_orient :/

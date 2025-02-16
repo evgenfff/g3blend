@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Tuple
 
 import bpy
 from mathutils import Matrix
@@ -60,7 +61,7 @@ def _detect_frame_time(xmot: Xmot):
     """
 
 
-def _group_motion_parts(xmot: Xmot) -> list[tuple[MotionPartChunk, list[KeyFrameChunk]]]:
+def _group_motion_parts(xmot: Xmot) -> List[Tuple[MotionPartChunk, List[KeyFrameChunk]]]:
     motion_parts = []
     cur_motion_part = None
     cur_key_frames = []
@@ -84,7 +85,7 @@ def _group_motion_parts(xmot: Xmot) -> list[tuple[MotionPartChunk, list[KeyFrame
 
 
 def _import_motion_part(chunk: MotionPartChunk, pose_bone: bpy.types.PoseBone, state: _ImportState) \
-        -> tuple[Matrix, Matrix]:
+        -> Tuple[Matrix, Matrix]:
     # This should be the rest matrix (local to parent).
     motion_part_pose_matrix = Matrix.LocRotScale(to_blend_vec(chunk.pose_position) * state.root_scale,
                                                  to_blend_quat(chunk.pose_rotation),
@@ -117,40 +118,40 @@ def _import_motion_part(chunk: MotionPartChunk, pose_bone: bpy.types.PoseBone, s
     return pre_matrix, post_matrix
 
 
-def _import_key_frames(animation_type: AnimationType, interpolation_type: InterpolationType, frames: list[KeyFrame],
+def _import_key_frames(animation_type: AnimationType, interpolation_type: InterpolationType, frames: List[KeyFrame],
                        pose_bone: bpy.types.PoseBone, pre_matrix: Matrix, post_matrix: Matrix, state: _ImportState,
                        synthesized: bool):
-    match animation_type:
-        # Position
-        case AnimationType.Position:
-            curve_path = 'location'
-            value_extract = lambda v: (pre_matrix @ Matrix.Translation(
-                to_blend_vec(v) * state.root_scale) @ post_matrix).to_translation()
-            num_channels = 3
-        # Rotation
-        case AnimationType.Rotation:
-            curve_path = 'rotation_quaternion'
-            value_extract = lambda v: (
-                    pre_matrix @ to_blend_quat(v).to_matrix().to_4x4() @ post_matrix).to_quaternion()
-            num_channels = 4
-        # Scaling
-        case AnimationType.Scaling:
-            curve_path = 'scale'
-            value_extract = lambda v: (pre_matrix @ Matrix.LocRotScale(None, None, to_blend_vec(
-                v)) @ post_matrix).to_scale().to_3d()
-            num_channels = 3
-        case _:
-            raise ValueError(f'Unsupported animation type: {animation_type}')
+    # Обработка animation_type
+    if animation_type == AnimationType.Position:
+        curve_path = 'location'
+        value_extract = lambda v: (pre_matrix @ Matrix.Translation(
+            to_blend_vec(v) * state.root_scale) @ post_matrix).to_translation()
+        num_channels = 3
 
-    match interpolation_type:
-        # Linear
-        case InterpolationType.Linear:
-            interpolation = 'LINEAR'
-        # Bezier
-        case InterpolationType.Bezier:
-            interpolation = 'BEZIER'
-        case _:
-            raise ValueError(f'Unsupported interpolation type: {interpolation_type}')
+    elif animation_type == AnimationType.Rotation:
+        curve_path = 'rotation_quaternion'
+        value_extract = lambda v: (
+            pre_matrix @ to_blend_quat(v).to_matrix().to_4x4() @ post_matrix).to_quaternion()
+        num_channels = 4
+
+    elif animation_type == AnimationType.Scaling:
+        curve_path = 'scale'
+        value_extract = lambda v: (pre_matrix @ Matrix.LocRotScale(None, None, to_blend_vec(
+            v)) @ post_matrix).to_scale().to_3d()
+        num_channels = 3
+
+    else:
+        raise ValueError(f'Unsupported animation type: {animation_type}')
+
+    # Обработка interpolation_type
+    if interpolation_type == InterpolationType.Linear:
+        interpolation = 'LINEAR'
+
+    elif interpolation_type == InterpolationType.Bezier:
+        interpolation = 'BEZIER'
+
+    else:
+        raise ValueError(f'Unsupported interpolation type: {interpolation_type}')
 
     prop = pose_bone.path_from_id(curve_path)
     curves = [state.action.fcurves.new(prop, index=channel, action_group=pose_bone.name)

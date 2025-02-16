@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 import bpy
 from mathutils import Matrix, Quaternion, Vector
@@ -48,7 +48,7 @@ def save_xmot(context: bpy.types.Context, filepath: str, arm_obj: bpy.types.Obje
     action = arm_obj.animation_data.action
 
     # Action animated values are relative to rest pose, so exactly what we need.
-    grouped_curves: dict[str, list[bpy.types.FCurve]] = defaultdict(list)
+    grouped_curves: Dict[str, List[bpy.types.FCurve]] = defaultdict(list)
     for curve in action.fcurves:
         grouped_curves[curve.data_path].append(curve)
 
@@ -153,35 +153,34 @@ def save_xmot(context: bpy.types.Context, filepath: str, arm_obj: bpy.types.Obje
                 continue
 
             interpolation, frames = frames_per_bone[key]
-            match interpolation:
-                # Linear
-                case 'LINEAR':
-                    interpolation_type = InterpolationType.Linear
-                # Bezier
-                case 'BEZIER':
-                    interpolation_type = InterpolationType.Bezier
-                case _:
-                    logger.warning('Unsupported interpolation: {}', interpolation)
-                    continue
+            # Обработка interpolation
+        if interpolation == 'LINEAR':
+            interpolation_type = InterpolationType.Linear
+        elif interpolation == 'BEZIER':
+            interpolation_type = InterpolationType.Bezier
+        else:
+            logger.warning('Unsupported interpolation: {}', interpolation)
+            continue
 
-            match animation_type:
-                # Position
-                case AnimationType.Position:
-                    value_map = lambda p, v: _from_blend_vec(
-                        (pre_matrix @ Matrix.Translation(v) @ post_matrix).to_translation() * root_scale_inv)
-                    frame_type = VectorKeyFrame
-                # Rotation
-                case AnimationType.Rotation:
-                    value_map = lambda p, v: _from_blend_quat(
-                        (pre_matrix @ v.to_matrix().to_4x4() @ post_matrix).to_quaternion())
-                    frame_type = QuaternionKeyFrame
-                # Scaling
-                case AnimationType.Scaling:
-                    value_map = lambda p, v: _from_blend_vec(
-                        (pre_matrix @ Matrix.LocRotScale(None, None, v) @ post_matrix).to_scale().to_3d())
-                    frame_type = VectorKeyFrame
-                case _:
-                    continue
+        # Обработка animation_type
+        if animation_type == AnimationType.Position:
+            value_map = lambda p, v: _from_blend_vec(
+                (pre_matrix @ Matrix.Translation(v) @ post_matrix).to_translation() * root_scale_inv)
+            frame_type = VectorKeyFrame
+
+        elif animation_type == AnimationType.Rotation:
+            value_map = lambda p, v: _from_blend_quat(
+                (pre_matrix @ v.to_matrix().to_4x4() @ post_matrix).to_quaternion())
+            frame_type = QuaternionKeyFrame
+
+        elif animation_type == AnimationType.Scaling:
+            value_map = lambda p, v: _from_blend_vec(
+                (pre_matrix @ Matrix.LocRotScale(None, None, v) @ post_matrix).to_scale().to_3d())
+            frame_type = VectorKeyFrame
+
+        else:
+            continue
+
             # If the pose position/rotation/scale (separately) of a bone is constant across the entire animation,
             # there is no key frame chunk for this property. To retain the pose of such a motion part, the xmot import
             # has to synthesize a key frame for it. Here on export we filter out these constant key frames again,
@@ -226,7 +225,7 @@ def save_xmot(context: bpy.types.Context, filepath: str, arm_obj: bpy.types.Obje
     context.scene.frame_set(old_scene_frame_current)
 
 
-def _extract_frame_effects(action: bpy.types.Action) -> dict[int, str]:
+def _extract_frame_effects(action: bpy.types.Action) -> Dict[int, str]:
     frame_effects = action.get('frame_effects', None)
     if frame_effects is None:
         return {}
@@ -238,8 +237,8 @@ def _extract_frame_effects(action: bpy.types.Action) -> dict[int, str]:
     return {int(frame): effect for frame, effect in items}
 
 
-def _extract_frames_from_curves(curves: list[bpy.types.FCurve], num_channels: int, combine) -> Optional[
-    tuple[str, list[tuple[float, Any]]]]:
+def _extract_frames_from_curves(curves: List[bpy.types.FCurve], num_channels: int, combine) -> Optional[
+    Tuple[str, List[Tuple[float, Any]]]]:
     if len(curves) != num_channels:
         logger.warning('Unexpected number of curves {} vs. {}.', num_channels, len(curves))
         return None
