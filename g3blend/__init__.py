@@ -4,14 +4,14 @@ from . import ui
 
 bl_info = {
     "name": "Gothic 3",
-    "author": "georgeto",
-    "version": (0, 1, 2),
+    "author": "evgenfff",
+    "version": (0, 1, 3),
     "description": "Gothic 3 Import/Export meshes, materials, textures, animations",
-    "blender": (3, 5, 0),
+    "blender": (2, 8, 0),
     "location": "File > Import-Export",
     "warning": "",
-    "doc_url": "https://github.com/georgeto/g3blend",
-    "tracker_url": "https://github.com/georgeto/g3blend/issues",
+    "doc_url": "https://github.com/evgenfff/g3blend",
+    "tracker_url": "https://github.com/evgenfff/g3blend/issues",
     "category": "Import-Export",
 }
 
