@@ -1,8 +1,7 @@
-import math
+import math, bpy
 from pathlib import Path
-from typing import Iterable, Optional, Type, TypeVar
+from typing import List, Dict, Iterable, Optional, Type, TypeVar, Tuple
 
-import bpy
 from bpy_extras.io_utils import axis_conversion
 from mathutils import Matrix, Quaternion, Vector
 
@@ -34,17 +33,17 @@ def to_blend_vec(vector: bCVector) -> Vector:
     return Vector((vector.x, vector.z, vector.y))
 
 
-def to_blend_vec_tuple(vector: bCVector) -> tuple[float, float, float]:
+def to_blend_vec_tuple(vector: bCVector) -> Tuple[float, float, float]:
     return vector.x, vector.z, vector.y
 
 
-def to_blend_vec_tuple_transform(vector: bCVector, transform: Matrix) -> tuple[float, float, float]:
+def to_blend_vec_tuple_transform(vector: bCVector, transform: Matrix) -> Tuple[float, float, float]:
     vec = to_blend_vec(vector)
     vec = transform @ vec
     return vec.x, vec.y, vec.z
 
 
-def to_blend_vec2_tuple(vector: bCVector2) -> tuple[float, float]:
+def to_blend_vec2_tuple(vector: bCVector2) -> Tuple[float, float]:
     return vector.x, vector.y
 
 
@@ -56,7 +55,7 @@ def _from_blend_vec(vector: Vector) -> bCVector:
     return bCVector(vector.x, vector.z, vector.y)
 
 
-def get_child_nodes(node: T, nodes: list[T]) -> Iterable[T]:
+def get_child_nodes(node: T, nodes: List[T]) -> Iterable[T]:
     return (child for child in nodes if child.parent == node.name)
 
 
@@ -80,7 +79,7 @@ def without_scale(matrix: Matrix) -> Matrix:
 
 def calc_arm_root_transformation(arm_matrix_base: Matrix, global_scale: float, global_matrix: Matrix,
                                  ignore_transform: bool) -> \
-        tuple[float | Vector, Matrix]:
+        Tuple[float, Vector, Matrix]:
     # If the armature transform is identity (e.g. baked) ignore, does not make a difference.
     if not ignore_transform:
         # TODO: Do we care if arm_obj itself is a child of something that has transformation?
@@ -108,18 +107,20 @@ def toogle_handness_vec(vec: Vector) -> Vector:
 def toogle_handness_matrix(matrix: Matrix) -> Matrix:
     return toggle_yz_matrix @ matrix @ toggle_yz_matrix
 
-
 def find_armature(context: bpy.types.Context) -> Optional[bpy.types.Object]:
     # TODO: Find actor by name or at least check compatibility?
     actor_obj = context.active_object
     if actor_obj is None:
         return None
 
-    if arm_obj := next((c for c in actor_obj.children if c.type == 'ARMATURE'), None):
+    arm_obj = next((c for c in actor_obj.children if c.type == 'ARMATURE'), None)
+    if arm_obj:
         return arm_obj
 
     if actor_obj.parent:
         return next((c for c in actor_obj.parent.children if c.type == 'ARMATURE'), None)
+
+    return None
 
 
 # Note: Taken from KrxImpExp

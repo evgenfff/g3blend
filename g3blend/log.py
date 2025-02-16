@@ -14,7 +14,7 @@ class StyleAdapter(logging.LoggerAdapter):
     def __init__(self, logger, extra=None):
         super().__init__(logger, extra or {})
 
-    def log(self, level: int, msg: str, /, *args, **kwargs):
+    def log(self, level: int, msg: str, *args, **kwargs):
         if self.isEnabledFor(level):
             msg, kwargs = self.process(msg, kwargs)
             self.logger._log(level, Message(msg, args), (), **kwargs)
