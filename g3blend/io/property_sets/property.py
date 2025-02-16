@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typing import Generic
+from typing import List, Dict, Generic
 
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 from ..property_types import PropertyTypeRegistry, TPropertyType
 
 
-@dataclass(slots=True)
+@dataclass()
 class Property(Generic[TPropertyType], BinarySerializable):
     name: str = None
     type: str = None

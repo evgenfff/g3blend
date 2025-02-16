@@ -1,11 +1,12 @@
 from dataclasses import dataclass
+from typing import List
 
 from ..animation.chunks import ChunkContainer
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 from ..property_types import bCDateTime
 
 
-@dataclass(slots=True)
+@dataclass()
 class eSFrameEffect(BinarySerializable):
     key_frame: int
     effect_name: str
@@ -61,7 +62,7 @@ class ResourceAnimationMotion(BinarySerializable):  # eCResourceAnimationMotion_
     native_file_time: bCDateTime
     native_file_size: int
     unk_file_time: bCDateTime  # Maybe actor?
-    frame_effects: list[eSFrameEffect]
+    frame_effects: List[eSFrameEffect]
     motion: eCWrapper_emfx2Motion
 
     def read(self, reader: BinaryReader) -> None:

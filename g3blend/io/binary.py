@@ -2,7 +2,7 @@ import struct
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Type, TypeVar
+from typing import List, Dict, Any, Callable, Iterable, Optional, Type, TypeVar, Union, List, Dict
 
 
 class BinarySerializable(ABC):
@@ -17,19 +17,17 @@ class BinarySerializable(ABC):
     def write(self, writer: 'BinaryWriter') -> None:
         pass
 
-
 TBinarySerializable = TypeVar("TBinarySerializable", bound=BinarySerializable)
 
 T = TypeVar('T')
 _ENCODING = 'windows-1252'
 
-
 class BinaryReader:
-    _buf: bytes | bytearray
+    _buf: Union[bytes, bytearray]
     _pos: int
-    _stringtable: Optional[list[str]]
+    _stringtable: Optional[List[str]]
 
-    def __init__(self, data: bytes | bytearray | Path):
+    def __init__(self, data: Union[bytes, bytearray, Path]):
         if isinstance(data, Path):
             self._buf = data.read_bytes()
         else:
@@ -136,9 +134,12 @@ class BinaryReader:
             value.read(self)
         return value
 
-    def read_list(self, typ: Type[TBinarySerializable] = None, read: Callable[['BinaryReader'], T] = None,
-                  num: int = None) -> list[TBinarySerializable] | list[T]:
-
+    def read_list(
+            self,
+            typ: Type[TBinarySerializable] = None, 
+            read: Callable[['BinaryReader'], T] = None,
+            num: int = None
+    ) -> List[Union[TBinarySerializable, T]]:
         if num is None:
             num = self.read_u32()
 
@@ -149,8 +150,12 @@ class BinaryReader:
         else:
             raise ValueError()
 
-    def read_prefixed_list(self, typ: Type[TBinarySerializable] = None, read: Callable[['BinaryReader'], T] = None,
-                           num: int = None) -> list[TBinarySerializable] | list[T]:
+    def read_prefixed_list(
+            self, 
+            typ: Type[TBinarySerializable] = None, 
+            read: Callable[['BinaryReader'], T] = None,
+            num: int = None,
+    ) -> Union[List["TBinarySerializable"], List[T]]:
         # bTArray writes a useless byte during serialization.
         self.skip(1)
         return self.read_list(typ, read, num)
@@ -202,7 +207,7 @@ class BinaryReader:
 class BinaryWriter:
     _buf: bytearray
     _pos: int
-    _stringtable: dict[str, int]
+    _stringtable: Dict[str, int]
 
     def __init__(self):
         self._buf = bytearray()
@@ -291,7 +296,7 @@ class BinaryWriter:
     def write(self, value: TBinarySerializable) -> None:
         value.write(self)
 
-    def write_iter(self, vals: Iterable[TBinarySerializable] | Iterable[T],
+    def write_iter(self, vals: Union[Iterable[TBinarySerializable],Iterable[T]],
                    write: Callable[['BinaryWriter', T], None] = None) -> None:
         for val in vals:
             if write is not None:
@@ -299,12 +304,12 @@ class BinaryWriter:
             else:
                 self.write(val)
 
-    def write_list(self, vals: list[TBinarySerializable] | list[T], write: Callable[['BinaryWriter', T], None] = None):
+    def write_list(self, vals: List[Union[TBinarySerializable, T]], write: Callable[['BinaryWriter', T], None] = None):
         self.write_u32(len(vals))
         self.write_iter(vals, write)
 
-    def write_prefixed_list(self, vals: list[TBinarySerializable] | list[T],
-                            write: Callable[['BinaryWriter', T], None] = None):
+    def write_prefixed_list(self, vals: Union[List[TBinarySerializable], List[T]],
+                        write: Callable[['BinaryWriter', T], None] = None):
         # bTArray writes a useless byte during serialization.
         self.write_u8(1)
         self.write_list(vals, write)

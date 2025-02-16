@@ -1,4 +1,4 @@
-from typing import Generic
+from typing import List, Dict, Generic
 
 from ..property_types import TPropertyType
 

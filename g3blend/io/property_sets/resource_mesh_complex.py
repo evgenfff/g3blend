@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from .decorator import property_set
 from .resource_base import eCResourceBase_PS
@@ -10,7 +11,7 @@ from ..structs.mesh_element import eCMeshElement
 @dataclass
 class eCResourceMeshComplex_PS(eCResourceBase_PS):
     resource_priority: float = 0.0
-    mesh_elements: list[eCMeshElement] = field(default_factory=list)
+    mesh_elements: List[eCMeshElement] = field(default_factory=list)
 
     def read_post_version(self, reader: BinaryReader):
         super().read_post_version(reader)

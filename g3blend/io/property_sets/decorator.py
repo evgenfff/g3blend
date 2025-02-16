@@ -1,17 +1,17 @@
-from typing import Optional
+from typing import List, Dict, List, Optional
+
 
 from .registry import PropertySetRegistry
 
 
-def _process_class(cls, aliases: Optional[list[str]]):
+def _process_class(cls, aliases: Optional[List[str]]):
     PropertySetRegistry.register(cls, cls.__name__)
     if aliases:
         for alias in aliases:
             PropertySetRegistry.register(cls, alias)
     return cls
 
-
-def property_set(cls=None, /, *, aliases: Optional[list[str]] = None):
+def property_set(cls=None, aliases: Optional[List[str]] = None):
     """Register in data type registry."""
 
     def wrap(cls):

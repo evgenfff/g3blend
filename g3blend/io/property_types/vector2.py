@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type
-@dataclass(slots=True)
+@dataclass()
 class bCVector2(BinarySerializable):
     x: float
     y: float

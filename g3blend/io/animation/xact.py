@@ -1,7 +1,7 @@
 from .chunks import ChunkContainer
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 from ..property_types import bCBox, bCDateTime, bCVector
-
+from typing import List
 
 class MaterialReference(BinarySerializable):
     # LoD level inside a emfx2Actor (not to be confused with LoD level in
@@ -11,7 +11,7 @@ class MaterialReference(BinarySerializable):
     name: str
 
     def read(self, reader: BinaryReader) -> None:
-        # MaterialID = mat_index | lod_index
+        # MaterialID = mat_index, lod_index
         self.lod_index = reader.read_u16()
         self.mat_index = reader.read_u16()
         try:
@@ -34,10 +34,10 @@ class eCWrapper_emfx2Actor(BinarySerializable, ChunkContainer):
     high_version: int
     low_version: int
     # MaterialsLoDMappings: MaterialID -> MaterialReference
-    materials: list[MaterialReference]
-    # eCWrapper_emfx2Actor::CalculateAmbientOcclusion | ColorVertexAttribute
-    ambient_occlusion: list[list[int]]
-    tangent_vertices: list[list[bCVector]]  # TangentVertexAttribute
+    materials: List[MaterialReference]
+    # eCWrapper_emfx2Actor::CalculateAmbientOcclusion, ColorVertexAttribute
+    ambient_occlusion: List[List[int]]
+    tangent_vertices: List[List[bCVector]]  # TangentVertexAttribute
 
     def read(self, reader: BinaryReader) -> None:
         if not reader.expect_bytes(self._GENA_MAGIC):
@@ -109,8 +109,8 @@ class ResourceAnimationActor(BinarySerializable):  # eCResourceAnimationActor_PS
     native_file_size: int
     boundary: bCBox
 
-    look_at_constraints: list[eSLookAtConstraintData]
-    lods: list[eCWrapper_emfx2Actor]
+    look_at_constraints: List[eSLookAtConstraintData]
+    lods: List[eCWrapper_emfx2Actor]
     actor: eCWrapper_emfx2Actor
 
     def read(self, reader: BinaryReader) -> None:

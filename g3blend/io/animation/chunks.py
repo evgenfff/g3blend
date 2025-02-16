@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Generic, Type, TypeVar
+from typing import List, Dict, Generic, Type, TypeVar
 
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 from ..property_types import bCVector, bCVector2
@@ -135,7 +135,7 @@ class Vertex(BinarySerializable):
     org_vertex: int
     position: bCVector  # Z, Y, X
     normal: bCVector  # Z, Y, X
-    uv_sets: list[bCVector2]
+    uv_sets: List[bCVector2]
 
     def read(self, reader: BinaryReader) -> None:
         raise NotImplementedError("No size provided.")
@@ -163,8 +163,8 @@ class Submesh(BinarySerializable):
     mat_id: int
     num_uv_sets: int
     padding: bytes
-    vertices: list[Vertex]
-    indices: list[int]
+    vertices: List[Vertex]
+    indices: List[int]
 
     def read(self, reader: BinaryReader) -> None:
         raise NotImplementedError("No size provided.")
@@ -207,7 +207,7 @@ class MeshChunk(AbstractChunk):
     num_uv_sets: int
     is_collision_mesh: bool
     padding: bytes
-    submeshes: list[Submesh]
+    submeshes: List[Submesh]
 
     def read(self, reader: BinaryReader) -> None:
         self.node_number = reader.read_u32()
@@ -253,7 +253,7 @@ class SkinningInfoChunk(AbstractChunk):
     VERSION = 1
 
     node_index: int
-    influences: list[list[SkinInfluence]]
+    influences: List[List[SkinInfluence]]
 
     def read(self, reader: BinaryReader) -> None:
         raise NotImplementedError("No size provided.")
@@ -287,13 +287,13 @@ class AnimationType(Enum):
     Scaling = b'S'
 
 
-@dataclass(slots=True)
+@dataclass()
 class KeyFrame(BinarySerializable, Generic[KeyFrameValueType], ABC):
     time: float = None  # time in seconds
     value: KeyFrameValueType = None
 
 
-@dataclass(slots=True)
+@dataclass()
 class VectorKeyFrame(KeyFrame[bCVector]):
     def read(self, reader: BinaryReader) -> None:
         self.time = reader.read_float()
@@ -304,7 +304,7 @@ class VectorKeyFrame(KeyFrame[bCVector]):
         writer.write_vec3(self.value)
 
 
-@dataclass(slots=True)
+@dataclass()
 class QuaternionKeyFrame(KeyFrame[bCQuaternion]):
     def read(self, reader: BinaryReader) -> None:
         self.time = reader.read_float()
@@ -322,7 +322,7 @@ class KeyFrameChunk(AbstractChunk):
 
     interpolation_type: InterpolationType
     animation_type: AnimationType
-    frames: list[KeyFrame]
+    frames: List[KeyFrame]
 
     def read(self, reader: BinaryReader) -> None:
         key_frame_count = reader.read_u32()
@@ -330,11 +330,10 @@ class KeyFrameChunk(AbstractChunk):
         self.animation_type = AnimationType(reader.read_char())
         reader.skip(2)  # Padding
 
-        match self.animation_type:
-            case AnimationType.Position | AnimationType.Scaling:
-                self.frames = reader.read_list(VectorKeyFrame, num=key_frame_count)
-            case AnimationType.Rotation:
-                self.frames = reader.read_list(QuaternionKeyFrame, num=key_frame_count)
+        if self.animation_type in (AnimationType.Position, AnimationType.Scaling):
+            self.frames = reader.read_list(VectorKeyFrame, num=key_frame_count)
+        elif self.animation_type == AnimationType.Rotation:
+            self.frames = reader.read_list(QuaternionKeyFrame, num=key_frame_count)
 
     def write(self, writer: BinaryWriter) -> None:
         writer.write_u32(len(self.frames))
@@ -436,39 +435,38 @@ class MaterialChunk(AbstractChunk):
 
 
 def get_chunk_type(chunk_id: int, version: int):
-    match chunk_id:
-        case NodeChunk.ID:
-            if version == NodeChunk.VERSION:
-                return NodeChunk
+    if chunk_id == NodeChunk.ID:
+        if version == NodeChunk.VERSION:
+            return NodeChunk
 
-        case MotionPartChunk.ID:
-            if version == MotionPartChunk.VERSION:
-                return MotionPartChunk
+    elif chunk_id == MotionPartChunk.ID:
+        if version == MotionPartChunk.VERSION:
+            return MotionPartChunk
 
-        case KeyFrameChunk.ID:
-            if version == KeyFrameChunk.VERSION:
-                return KeyFrameChunk
+    elif chunk_id == KeyFrameChunk.ID:
+        if version == KeyFrameChunk.VERSION:
+            return KeyFrameChunk
 
-        case MeshChunk.ID:
-            if version == MeshChunk.VERSION:
-                return MeshChunk
+    elif chunk_id == MeshChunk.ID:
+        if version == MeshChunk.VERSION:
+            return MeshChunk
 
-        case SkinningInfoChunk.ID:
-            if version == SkinningInfoChunk.VERSION:
-                return SkinningInfoChunk
+    elif chunk_id == SkinningInfoChunk.ID:
+        if version == SkinningInfoChunk.VERSION:
+            return SkinningInfoChunk
 
-        case MaterialChunk.ID:
-            if version == MaterialChunk.VERSION:
-                return MaterialChunk
+    elif chunk_id == MaterialChunk.ID:
+        if version == MaterialChunk.VERSION:
+            return MaterialChunk
 
-        case _:
-            return UnknownChunk
+    else:
+        return UnknownChunk
 
     raise ValueError(f"ChunkID {chunk_id} with version {version} is not supported.")
 
 
 class ChunkContainer:
-    chunks: list[Chunk]
+    chunks: List[Chunk]
 
     def has_chunk(self, chunk_type: Type[TChunk]) -> bool:
         return any(self.get_chunks_by_type(chunk_type))
@@ -478,7 +476,7 @@ class ChunkContainer:
         assert len(typed_chunks) == 1
         return typed_chunks[0]
 
-    def get_chunks_by_type(self, chunk_type: Type[TChunk]) -> list[TChunk]:
+    def get_chunks_by_type(self, chunk_type: Type[TChunk]) -> List[TChunk]:
         return [c for c in self.chunks if c.chunk_id == chunk_type.ID]
 
     def read_chunks(self, reader: BinaryReader, offset_end: int):

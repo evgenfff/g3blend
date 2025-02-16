@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinaryWriter
 from ..types import bCGuid, bCRect
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCShaderEllementBase(PropertySet):
     token: bCGuid
     editor_layout: bCRect

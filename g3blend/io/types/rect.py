@@ -4,7 +4,7 @@ from . import bCPoint
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
-@dataclass(slots=True)
+@dataclass()
 class bCRect(BinarySerializable):
     top_left: bCPoint
     bottom_right: bCPoint

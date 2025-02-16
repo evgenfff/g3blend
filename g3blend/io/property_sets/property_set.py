@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Type
+from typing import List, Dict, List, Optional, Type
 
 from .property import Property
 from .property_desc import PropertyDescriptor
@@ -10,7 +10,7 @@ from ..property_types import TPropertyType
 @dataclass
 class PropertySet(BinarySerializable):
     name: str
-    properties: list[Property]
+    properties: List[Property]
     version: int
     _property_version: int
     _deadcode_position: int

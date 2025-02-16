@@ -1,4 +1,4 @@
-from typing import Type, TypeVar
+from typing import List, Dict, Type, TypeVar, Dict
 
 from .default_property_set import DefaultPropertySet
 from .property_set import PropertySet
@@ -7,7 +7,7 @@ TPropertySet = TypeVar('TPropertySet', bound=PropertySet)
 
 
 class PropertySetRegistry:
-    property_types: dict[str, Type[TPropertySet]] = {}
+    property_types: Dict[str, Type[TPropertySet]] = {}
 
     @classmethod
     def register(cls, property_type: Type[TPropertySet], type_name: str) -> None:

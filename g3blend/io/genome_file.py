@@ -1,4 +1,4 @@
-from typing import Type
+from typing import List, Dict, Type
 
 from .binary import BinaryReader, BinaryWriter, TBinarySerializable
 from .property_sets.property_set import PropertySet
@@ -27,10 +27,12 @@ def read(reader: BinaryReader, content_type: Type[TBinarySerializable],
         else:
             raise ValueError('Not a valid Genome file.')
 
-    if (version := reader.read_u16()) != _VERSION:
+    version = reader.read_u16()  # Обычное присваивание
+    if version != _VERSION:
         raise ValueError(f'Unsupported Genome file version: {version}')
 
     deadbeef_offset = reader.read_u32()
+
 
     with reader.at_position(deadbeef_offset):
         if not reader.expect_bytes(_DEADBEEF):

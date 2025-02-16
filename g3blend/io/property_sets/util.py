@@ -1,3 +1,4 @@
+from typing import Tuple
 from .registry import PropertySetRegistry, TPropertySet
 from ..binary import BinaryReader, BinaryWriter
 
@@ -20,7 +21,7 @@ def read_property_set(reader: BinaryReader) -> TPropertySet:
     return property_set
 
 
-def read_wrapped_property_set(reader: BinaryReader) -> tuple[TPropertySet, int]:
+def read_wrapped_property_set(reader: BinaryReader) -> Tuple[TPropertySet, int]:
     version = reader.read_u16()
     property_set = read_property_set(reader)
     if not reader.expect_bytes(_DEADCODE):

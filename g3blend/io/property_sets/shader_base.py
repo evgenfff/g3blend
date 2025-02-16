@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Dict, Optional
 
 from .property_set import PropertySet
 from .shader_element_base import eCShaderEllementBase
@@ -10,7 +10,7 @@ from ..types import bCGuid
 
 @dataclass
 class eCShaderBase(eCShaderEllementBase):
-    shader_elements: list[PropertySet]
+    shader_elements: List[PropertySet]
 
     def get_element(self, token: bCGuid) -> Optional[eCShaderEllementBase]:
         return next((e for e in self.shader_elements if isinstance(e, eCShaderEllementBase) and e.token == token),

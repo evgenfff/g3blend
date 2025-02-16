@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
-@dataclass(slots=True)
+@dataclass()
 class bCVector4(BinarySerializable):
     x: float
     y: float

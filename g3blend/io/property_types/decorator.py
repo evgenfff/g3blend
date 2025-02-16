@@ -1,7 +1,6 @@
-from typing import Optional
+from typing import List, Dict, Optional, List
 
-
-def _process_class(cls, name: Optional[str], aliases: Optional[list[str]]):
+def _process_class(cls, name: Optional[str], aliases: Optional[List[str]]):
     from ..property_types import registry
     registry.PropertyTypeRegistry.register(cls, name if name else cls.__name__)
     if aliases:
@@ -10,7 +9,7 @@ def _process_class(cls, name: Optional[str], aliases: Optional[list[str]]):
     return cls
 
 
-def property_type(cls=None, /, *, name: Optional[str] = None, aliases: Optional[list[str]] = None):
+def property_type(cls=None, *, name: Optional[str] = None, aliases: Optional[List[str]] = None):
     """Register in data type registry."""
 
     def wrap(cls):

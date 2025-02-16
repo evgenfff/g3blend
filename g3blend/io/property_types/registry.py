@@ -1,10 +1,10 @@
-from typing import Type, TypeVar
+from typing import List, Dict, Type, TypeVar, Dict
 
 TPropertyType = TypeVar('TPropertyType', bound='BinarySerializable')
 
 
 class PropertyTypeRegistry:
-    property_types: dict[str, Type[TPropertyType]] = {}
+    property_types: Dict[str, Type[TPropertyType]] = {} 
 
     @classmethod
     def is_property_container(cls, type_name: str) -> bool:

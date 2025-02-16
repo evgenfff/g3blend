@@ -4,7 +4,7 @@ from .guid import bCGuid
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCTexCoordSrcProxy(BinarySerializable):
     vertex_tex_coord: int
     guid: bCGuid

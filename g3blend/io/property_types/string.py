@@ -6,7 +6,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 @property_type(aliases=['bCAnimationResourceString', 'bCImageOrMaterialResourceString', 'bCImageResourceString',
                         'bCMeshResourceString', 'bCScriptString', 'bCSpeedTreeResourceString', 'eCLocString'])
-@dataclass(slots=True)
+@dataclass()
 class bCString(BinarySerializable):
     value: str
 

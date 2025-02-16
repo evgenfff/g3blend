@@ -4,7 +4,7 @@ from .guid import bCGuid
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCColorSrcProxy(BinarySerializable):
     color_component: int
     guid: bCGuid

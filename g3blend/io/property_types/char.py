@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type(name='char')
-@dataclass(slots=True)
+@dataclass()
 class gChar(BinarySerializable):
     value: bytes
 

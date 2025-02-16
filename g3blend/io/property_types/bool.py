@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type(name='bool')
-@dataclass(slots=True)
+@dataclass 
 class gBool(BinarySerializable):
     value: bool
 

@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type
-@dataclass(slots=True)
+@dataclass()
 class bTPropertyContainer(BinarySerializable):
     enum_value: int
 

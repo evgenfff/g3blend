@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type
-@dataclass(slots=True)
+@dataclass()
 class bCDateTime(BinarySerializable):
     file_time: int
 

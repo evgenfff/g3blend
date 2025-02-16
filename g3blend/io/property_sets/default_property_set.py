@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Dict, Optional
 
 from .property_set import PropertySet
 from ..binary import BinaryReader, BinaryWriter
@@ -8,7 +8,7 @@ from ... import log as logging
 logger = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass()
 class DefaultPropertySet(PropertySet):
     raw: Optional[bytes]
 

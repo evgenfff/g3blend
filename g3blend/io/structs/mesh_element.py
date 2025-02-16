@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Callable, ClassVar, Generic, Optional, TypeVar
+from typing import List, Dict, Callable, ClassVar, Generic, Optional, TypeVar
 
 from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 from ..property_types import bCBox, bCVector, bCVector2
 from ..types.vector4 import bCVector4
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(frozen=True)
 class eSFVF:
     vertex_stream_type: int
     vertex_type_struct: int
@@ -220,13 +220,13 @@ _vertex_stream_to_struct_map = {
 TVetexArrayType = TypeVar("TVetexArrayType")
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArrayBase(Generic[TVetexArrayType], BinarySerializable):
     read_element: ClassVar[Callable[[BinaryReader], TVetexArrayType]]
     write_element: ClassVar[Callable[[BinaryWriter, TVetexArrayType], None]]
 
     vertex_stream_type: eEVertexStreamArrayType
-    elements: list[TVetexArrayType] = field(default_factory=list)
+    elements: List[TVetexArrayType] = field(default_factory=list)
 
     def read(self, reader: BinaryReader):
         reader.skip(2)
@@ -237,42 +237,42 @@ class eCVertexStructArrayBase(Generic[TVetexArrayType], BinarySerializable):
         writer.write_prefixed_list(self.elements, write=self.__class__.write_element)
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_GEFloat(eCVertexStructArrayBase[float]):
     struct_type = eEVertexTypeStruct.GEFloat
     read_element = BinaryReader.read_float
     write_element = BinaryWriter.write_float
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_GEU16(eCVertexStructArrayBase[int]):
     struct_type = eEVertexTypeStruct.GEU16
     read_element = BinaryReader.read_u16
     write_element = BinaryWriter.write_u16
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_GEU32(eCVertexStructArrayBase[int]):
     struct_type = eEVertexTypeStruct.GEU32
     read_element = BinaryReader.read_u32
     write_element = BinaryWriter.write_u32
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_bCVector2(eCVertexStructArrayBase[bCVector2]):
     struct_type = eEVertexTypeStruct.bCVector2
     read_element = BinaryReader.read_vec2
     write_element = BinaryWriter.write_vec2
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_bCVector3(eCVertexStructArrayBase[bCVector]):
     struct_type = eEVertexTypeStruct.bCVector3
     read_element = BinaryReader.read_vec3
     write_element = BinaryWriter.write_vec3
 
 
-@dataclass(slots=True)
+@dataclass()
 class eCVertexStructArray_bCVector4(eCVertexStructArrayBase[bCVector4]):
     struct_type = eEVertexTypeStruct.bCVector4
     read_element = BinaryReader.read_vec4
@@ -280,31 +280,31 @@ class eCVertexStructArray_bCVector4(eCVertexStructArrayBase[bCVector4]):
 
 
 def create_vertex_struct_array(vertex_stream_type: eEVertexStreamArrayType) -> eCVertexStructArrayBase:
-    match _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct:
-        case eEVertexTypeStruct.bCVector2:
-            return eCVertexStructArray_bCVector2(vertex_stream_type)
-        case eEVertexTypeStruct.bCVector3:
-            return eCVertexStructArray_bCVector3(vertex_stream_type)
-        case eEVertexTypeStruct.bCVector4:
-            return eCVertexStructArray_bCVector4(vertex_stream_type)
-        case eEVertexTypeStruct.GEU16:
-            return eCVertexStructArray_GEU16(vertex_stream_type)
-        case eEVertexTypeStruct.GEU32:
-            return eCVertexStructArray_GEU32(vertex_stream_type)
-        case eEVertexTypeStruct.GEFloat:
-            return eCVertexStructArray_GEFloat(vertex_stream_type)
-        case _:
-            raise ValueError('Unsupported vertex stream array.')
+    if _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.bCVector2:
+        return eCVertexStructArray_bCVector2(vertex_stream_type)
+    elif _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.bCVector3:
+        return eCVertexStructArray_bCVector3(vertex_stream_type)
+    elif _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.bCVector4:
+        return eCVertexStructArray_bCVector4(vertex_stream_type)
+    elif _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.GEU16:
+        return eCVertexStructArray_GEU16(vertex_stream_type)
+    elif _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.GEU32:
+        return eCVertexStructArray_GEU32(vertex_stream_type)
+    elif _vertex_stream_to_struct_map[vertex_stream_type].vertex_type_struct == eEVertexTypeStruct.GEFloat:
+        return eCVertexStructArray_GEFloat(vertex_stream_type)
+    else:
+        raise ValueError('Unsupported vertex stream array.')
 
 
-@dataclass(slots=True)
+
+@dataclass()
 class eCMeshElement(BinarySerializable):
     version: int
     fvf: int
     bounding_box: bCBox
     size: int
     material_name: str
-    stream_arrays: list[eCVertexStructArrayBase]
+    stream_arrays: List[eCVertexStructArrayBase]
 
     def read(self, reader: BinaryReader):
         self.version = reader.read_u16()
@@ -352,5 +352,5 @@ class eCMeshElement(BinarySerializable):
     def has_stream_array(self, stream_type: eEVertexStreamArrayType) -> bool:
         return any(a.vertex_stream_type == stream_type for a in self.stream_arrays)
 
-    def get_stream_array_by_type(self, stream_type: eEVertexStreamArrayType) -> Optional[list[TVetexArrayType]]:
+    def get_stream_array_by_type(self, stream_type: eEVertexStreamArrayType) -> Optional[List[TVetexArrayType]]:
         return next((a.elements for a in self.stream_arrays if a.vertex_stream_type == stream_type), None)

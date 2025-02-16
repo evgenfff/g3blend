@@ -5,7 +5,7 @@ from ..binary import BinaryReader, BinarySerializable, BinaryWriter
 
 
 @property_type(name='float')
-@dataclass(slots=True)
+@dataclass()
 class gFloat(BinarySerializable):
     value: float
 
