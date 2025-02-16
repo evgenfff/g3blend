@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import List, Dict, Optional
 
 import bpy
 from bpy.props import FloatProperty
